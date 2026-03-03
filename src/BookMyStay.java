@@ -1,104 +1,58 @@
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Queue;
 
-abstract class Room {
+class Reservation {
 
+    private String guestName;
     private String roomType;
-    private int numberOfBeds;
-    private double pricePerNight;
 
-    public Room(String roomType, int numberOfBeds, double pricePerNight) {
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
         this.roomType = roomType;
-        this.numberOfBeds = numberOfBeds;
-        this.pricePerNight = pricePerNight;
+    }
+
+    public String getGuestName() {
+        return guestName;
     }
 
     public String getRoomType() {
         return roomType;
     }
 
-    public int getNumberOfBeds() {
-        return numberOfBeds;
-    }
-
-    public double getPricePerNight() {
-        return pricePerNight;
-    }
-
-    public void displayDetails() {
-        System.out.println("Room Type       : " + roomType);
-        System.out.println("Beds            : " + numberOfBeds);
-        System.out.println("Price Per Night : $" + pricePerNight);
+    @Override
+    public String toString() {
+        return "Guest: " + guestName + " | Requested Room: " + roomType;
     }
 }
 
-class SingleRoom extends Room {
-    public SingleRoom() {
-        super("Single Room", 1, 80.0);
-    }
-}
+class BookingRequestQueue {
 
-class DoubleRoom extends Room {
-    public DoubleRoom() {
-        super("Double Room", 2, 140.0);
-    }
-}
+    private Queue<Reservation> requestQueue;
 
-class SuiteRoom extends Room {
-    public SuiteRoom() {
-        super("Suite Room", 3, 300.0);
-    }
-}
-
-class RoomInventory {
-
-    private Map<String, Integer> availability;
-
-    public RoomInventory() {
-        availability = new HashMap<>();
+    public BookingRequestQueue() {
+        requestQueue = new LinkedList<>();
     }
 
-    public void registerRoomType(String roomType, int count) {
-        availability.put(roomType, count);
+    public void addRequest(Reservation reservation) {
+        requestQueue.offer(reservation);
+        System.out.println("Booking request added: " + reservation);
     }
 
-    public int getAvailability(String roomType) {
-        return availability.getOrDefault(roomType, 0);
-    }
+    public void displayPendingRequests() {
+        System.out.println("\n--- Pending Booking Requests (FIFO Order) ---");
 
-    public Map<String, Integer> getAllAvailability() {
-        return Collections.unmodifiableMap(availability);
-    }
-}
+        if (requestQueue.isEmpty()) {
+            System.out.println("No pending requests.");
+            return;
+        }
 
-class RoomSearchService {
-
-    private RoomInventory inventory;
-    private Map<String, Room> roomCatalog;
-
-    public RoomSearchService(RoomInventory inventory, List<Room> rooms) {
-        this.inventory = inventory;
-        this.roomCatalog = new HashMap<>();
-
-        for (Room room : rooms) {
-            roomCatalog.put(room.getRoomType(), room);
+        for (Reservation reservation : requestQueue) {
+            System.out.println(reservation);
         }
     }
 
-    public void searchAvailableRooms() {
-        System.out.println("\n--- Available Rooms ---");
-
-        for (Map.Entry<String, Integer> entry : inventory.getAllAvailability().entrySet()) {
-
-            String roomType = entry.getKey();
-            int count = entry.getValue();
-
-            if (count > 0) {
-                Room room = roomCatalog.get(roomType);
-                room.displayDetails();
-                System.out.println("Available Units : " + count);
-                System.out.println("-----------------------------------");
-            }
-        }
+    public Queue<Reservation> getAllRequests() {
+        return requestQueue;
     }
 }
 
@@ -107,28 +61,22 @@ public class BookMyStay {
     public static void main(String[] args) {
 
         String appName = "Book My Stay - Hotel Booking Management System";
-        String version = "Version 4.0";
+        String version = "Version 5.0";
 
         System.out.println("==========================================");
         System.out.println("      Welcome to " + appName);
         System.out.println("               " + version);
         System.out.println("==========================================");
 
-        RoomInventory inventory = new RoomInventory();
-        inventory.registerRoomType("Single Room", 5);
-        inventory.registerRoomType("Double Room", 0);
-        inventory.registerRoomType("Suite Room", 2);
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-        List<Room> rooms = Arrays.asList(
-                new SingleRoom(),
-                new DoubleRoom(),
-                new SuiteRoom()
-        );
+        bookingQueue.addRequest(new Reservation("Alice", "Single Room"));
+        bookingQueue.addRequest(new Reservation("Bob", "Double Room"));
+        bookingQueue.addRequest(new Reservation("Charlie", "Suite Room"));
+        bookingQueue.addRequest(new Reservation("Diana", "Single Room"));
 
-        RoomSearchService searchService = new RoomSearchService(inventory, rooms);
+        bookingQueue.displayPendingRequests();
 
-        searchService.searchAvailableRooms();
-
-        System.out.println("\nSearch completed. Inventory state unchanged.");
+        System.out.println("\nRequests stored successfully. No inventory updates performed.");
     }
 }
